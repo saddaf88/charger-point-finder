@@ -1,10 +1,10 @@
 import './App.css';
 import {MapContainer, Marker, Popup, TileLayer} from "react-leaflet";
 import {Icon} from "leaflet";
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useState, useCallback} from "react";
 import {getAllChargePoint} from './Resources/API/api'
 
-var cordinaties = [50.8170709, 12.96230];
+// var cordinaties = [50.8170709, 12.96230];
 
 export default function App() {
   //Configuring the marker icon
@@ -26,38 +26,54 @@ export default function App() {
 
   //Getting user's current position
   function getCurrentPosition() {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(showPosition, showError);
-    }
-  }
-
-  function showPosition(position) {
-    setPosition(position.coords);
-  }
-
-  function showError(error) {
-    alert("error");
-    console.warn(error.message)
+    return new Promise((res, rej) => {
+      navigator.geolocation.getCurrentPosition(res, rej);
+    });
   }
 
   //The states for the app
   const [mapData, setMapData] = useState();
   const [position, setPosition] = useState();
-  const [maxDistance, setDistance] = useState();
+  const [distance, setDistance] = useState();
+  const [maxDistance, setMaxDistance] = useState();
   const [isType2, setType2] = useState(true);
   const [isCHAdeMO, setCHAdeMO] = useState(true);
   const [isCCS, setCCS] = useState(true);
+  const [typeIDs, setTypeIDs] = useState();
 
-  function getMapData(distance, latitude, longitude, connectiontypeid){
+  function getMapData(distance, latitude, longitude, connectiontypeid) {
     getAllChargePoint(distance, latitude, longitude, connectiontypeid).then(data => {
       setMapData(data);
     })
   }
 
+  const creatConnnectionTypeIDs = useCallback(() => {
+    var connectiontype;
+
+    if (isType2) {
+      connectiontype = process.env.REACT_APP_CONNECTION_TYPE_TYPE2;
+    }
+    if (isCHAdeMO) {
+      if (connectiontype) connectiontype = connectiontype + "," + process.env.REACT_APP_CONNECTION_TYPE_CHAdeMO
+      else connectiontype = process.env.REACT_APP_CONNECTION_TYPE_CHAdeMO;
+    }
+    if (isCCS) {
+      if (connectiontype) connectiontype = connectiontype + "," + process.env.REACT_APP_CONNECTION_TYPE_CCS
+      else connectiontype = process.env.REACT_APP_CONNECTION_TYPE_CCS;
+    }
+    setTypeIDs(connectiontype);
+  },[isType2,isCHAdeMO,isCCS])
+
   useEffect(() => {
-    getCurrentPosition();
-    if(position) getMapData(maxDistance ? maxDistance : 100, position.latitude, position.longitude, creatConnnectionTypeIDs())
-  }, [position, isType2, isCCS, isCHAdeMO]);
+
+    getCurrentPosition().then((data) => {
+      setPosition(data.coords);
+      creatConnnectionTypeIDs();
+      if(typeIDs)getMapData(distance ? distance : 100, data.coords.latitude, data.coords.longitude, typeIDs)
+    });
+  }, [distance, typeIDs, creatConnnectionTypeIDs]);
+
+
 
   const setPopup = (data, label) => {
     var info;
@@ -67,7 +83,7 @@ export default function App() {
     } else if (label === "Longitude") {
       info = data.longitude.toFixed(2)
     } else if (label === "Distance") {
-      info = data.distance.toFixed(2) + (data.distanceUnit === 1 ? "km" : "")
+      info = data.distance ? (data.distance.toFixed(2) + (data.distanceUnit === 1 ? "km" : "")) : "";
     } else if (label === "Status:") {
       info = data.length ? "Available" : "Occupied"
     } else if (label === "Connectors") {
@@ -95,6 +111,7 @@ export default function App() {
             <label>{data["powerKW"]}kW</label>
           </div>
         </div>)
+      else return <div className='row' key={`connector-tbl-${idx}`}></div>
     })
   }
 
@@ -143,36 +160,24 @@ export default function App() {
     var value = event.target.value;
     var isChecked = event.target.checked
 
+    setMapData();
+    setTypeIDs();
+
     if (value === process.env.REACT_APP_CONNECTION_TYPE_TYPE2) setType2((current) => (current = isChecked));
     else if (value === process.env.REACT_APP_CONNECTION_TYPE_CHAdeMO) setCHAdeMO((current) => (current = isChecked));
     else if (value === process.env.REACT_APP_CONNECTION_TYPE_CCS) setCCS((current) => (current = isChecked));
   }
 
-  function onKeyDown(e){
+  function onKeyDown(e) {
     /// When enter button is pressed
     if (e.keyCode === 13) {
-      getMapData(maxDistance ? maxDistance : 100, position.latitude, position.longitude, creatConnnectionTypeIDs());
+      setMapData();
+      setDistance(maxDistance);
     }
   }
 
-  function onChange(e){
-    setDistance(e.target.value);
-  }
-
-  function creatConnnectionTypeIDs(){
-    var connectiontype;
-    if(isType2){
-      connectiontype = process.env.REACT_APP_CONNECTION_TYPE_TYPE2;
-    }
-    if(isCHAdeMO){
-      if(connectiontype) connectiontype = connectiontype + "," + process.env.REACT_APP_CONNECTION_TYPE_CHAdeMO
-      else connectiontype = process.env.REACT_APP_CONNECTION_TYPE_CHAdeMO;
-    }
-    if(isCCS){
-      if(connectiontype) connectiontype = connectiontype + "," + process.env.REACT_APP_CONNECTION_TYPE_CCS
-      else connectiontype = process.env.REACT_APP_CONNECTION_TYPE_CCS;
-    }
-    return connectiontype;
+  function onChange(e) {
+    setMaxDistance(e.target.value);
   }
 
   return (
@@ -183,8 +188,12 @@ export default function App() {
           <input type="text"
                  placeholder={"max distance in km"}
                  value={maxDistance}
-                 onChange={(event) => {onChange(event)}}
-                 onKeyDown={(event) => {onKeyDown(event)}}/>
+                 onChange={(event) => {
+                   onChange(event)
+                 }}
+                 onKeyDown={(event) => {
+                   onKeyDown(event)
+                 }}/>
           <label style={{paddingLeft: 10}}>Connection Type:</label>
 
           <input type="checkbox"
