@@ -4,6 +4,8 @@ import {Icon} from "leaflet";
 import React, {useEffect, useState} from "react";
 import {getAllChargePoint} from './Resources/API/api'
 
+var cordinaties = [50.8170709, 12.96230];
+
 export default function App() {
   //Configuring the marker icon
   const LeafIcon = Icon.extend({
@@ -82,7 +84,7 @@ export default function App() {
       if (data["connectionType"]["id"].toString() === process.env.REACT_APP_CONNECTION_TYPE_TYPE2 ||
           data["connectionType"]["id"].toString() === process.env.REACT_APP_CONNECTION_TYPE_CCS ||
           data["connectionType"]["id"].toString() === process.env.REACT_APP_CONNECTION_TYPE_CHAdeMO)
-        return <div className='row'>
+        return (<div className='row' key={`connector-tbl-${idx}`}>
           <div className='column'>
             <label>{idx + 1}</label>
           </div>
@@ -92,7 +94,7 @@ export default function App() {
           <div className='column'>
             <label>{data["powerKW"]}kW</label>
           </div>
-        </div>
+        </div>)
     })
   }
 
@@ -147,6 +149,7 @@ export default function App() {
   }
 
   function onKeyDown(e){
+    /// When enter button is pressed
     if (e.keyCode === 13) {
       getMapData(maxDistance ? maxDistance : 100, position.latitude, position.longitude, creatConnnectionTypeIDs());
     }
@@ -174,8 +177,8 @@ export default function App() {
 
   return (
       <div>
-        {(!mapData || !position) && <div> Loading. . . </div>}
-        {mapData && position &&
+        {(!mapData) && <div> Loading. . . </div>}
+        {mapData &&
         <div style={{padding: 10}}>
           <input type="text"
                  placeholder={"max distance in km"}
@@ -200,7 +203,7 @@ export default function App() {
                  checked={isCCS}
                  onChange={(e) => setConnectionType(e)}/> CCS
         </div>}
-        {mapData && position &&
+        {mapData &&
         (<MapContainer center={[position.latitude, position.longitude]} zoom={13} scrollWheelZoom={false}>
           <TileLayer
               attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'

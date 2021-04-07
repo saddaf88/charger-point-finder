@@ -2,14 +2,14 @@ import axios from "axios";
 
 var baseURL = "https://api.openchargemap.io/v3/poi/?"
 
-export async function getAllChargePoint(distance, latitude, longitude, connectiontypeid) {
+export async function getAllChargePoint(valDistance, valLatitude, valLongitude, valConnectiontypeid) {
   var output = "output=json";
   var camelcase = "&camelcase=true";
-  var distance = "&distance="+ distance ;
+  var distance = "&distance="+ valDistance ;
   var distanceUnit = "&distanceunit=KM";
-  var latitude = "&latitude="+ latitude ;
-  var longitude = "&longitude="+ longitude;
-  var connectiontypeid = connectiontypeid ? "&connectiontypeid="+ connectiontypeid : "";
+  var latitude = "&latitude="+ valLatitude ;
+  var longitude = "&longitude="+ valLongitude;
+  var connectiontypeid = valConnectiontypeid ? "&connectiontypeid="+ valConnectiontypeid : "";
 
   var url = baseURL + output + camelcase + distance + distanceUnit + latitude + longitude + connectiontypeid
   try {
