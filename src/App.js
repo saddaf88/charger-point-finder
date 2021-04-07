@@ -3,10 +3,18 @@ import {MapContainer, Marker, Popup, TileLayer} from "react-leaflet";
 import {Icon} from "leaflet";
 import React, {useEffect, useState, useCallback} from "react";
 import {getAllChargePoint} from './Resources/API/api'
+import ReactLoading from 'react-loading';
 
 // var cordinaties = [50.8170709, 12.96230];
 
 export default function App() {
+  /// Loading view
+  const LoadingView = () => (
+      <div className='layout'>
+        <ReactLoading type="spin" color="#2980b9" height={30} width={30} />
+      </div>
+  );
+
   //Configuring the marker icon
   const LeafIcon = Icon.extend({
     options: {}
@@ -35,11 +43,12 @@ export default function App() {
   const [mapData, setMapData] = useState();
   const [position, setPosition] = useState();
   const [distance, setDistance] = useState();
-  const [maxDistance, setMaxDistance] = useState();
+  const [maxDistance, setMaxDistance] = useState('');
   const [isType2, setType2] = useState(true);
   const [isCHAdeMO, setCHAdeMO] = useState(true);
   const [isCCS, setCCS] = useState(true);
   const [typeIDs, setTypeIDs] = useState();
+
 
   function getMapData(distance, latitude, longitude, connectiontypeid) {
     getAllChargePoint(distance, latitude, longitude, connectiontypeid).then(data => {
@@ -72,7 +81,6 @@ export default function App() {
       if(typeIDs)getMapData(distance ? distance : 100, data.coords.latitude, data.coords.longitude, typeIDs)
     });
   }, [distance, typeIDs, creatConnnectionTypeIDs]);
-
 
 
   const setPopup = (data, label) => {
@@ -182,7 +190,7 @@ export default function App() {
 
   return (
       <div>
-        {(!mapData) && <div> Loading. . . </div>}
+        {!mapData && <LoadingView/>}
         {mapData &&
         <div style={{padding: 10}}>
           <input type="text"
