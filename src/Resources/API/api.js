@@ -9,7 +9,7 @@ export async function getAllChargePoint(valDistance, valLatitude, valLongitude, 
   var distanceUnit = "&distanceunit=KM";
   var latitude = "&latitude="+ valLatitude ;
   var longitude = "&longitude="+ valLongitude;
-  var connectiontypeid = valConnectiontypeid ? "&connectiontypeid="+ valConnectiontypeid : "";
+  var connectiontypeid = valConnectiontypeid === process.env.REACT_APP_DEFAULT_CONNECTION_ID ? "" : "&connectiontypeid="+ valConnectiontypeid;
 
   var url = baseURL + output + camelcase + distance + distanceUnit + latitude + longitude + connectiontypeid
   try {

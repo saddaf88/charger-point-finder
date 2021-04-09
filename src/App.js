@@ -70,6 +70,7 @@ export default function App() {
       if (connectiontype) connectiontype = connectiontype + "," + process.env.REACT_APP_CONNECTION_TYPE_CCS
       else connectiontype = process.env.REACT_APP_CONNECTION_TYPE_CCS;
     }
+    if(!connectiontype) connectiontype = process.env.REACT_APP_DEFAULT_CONNECTION_ID;
     setTypeIDs(connectiontype);
   },[isType2,isCHAdeMO,isCCS])
 
@@ -78,7 +79,7 @@ export default function App() {
     getCurrentPosition().then((data) => {
       setPosition(data.coords);
       creatConnnectionTypeIDs();
-      if(typeIDs)getMapData(distance ? distance : 100, data.coords.latitude, data.coords.longitude, typeIDs)
+       if(typeIDs) getMapData(distance ? distance : 100, data.coords.latitude, data.coords.longitude, typeIDs)
     });
   }, [distance, typeIDs, creatConnnectionTypeIDs]);
 
